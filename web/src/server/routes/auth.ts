@@ -124,7 +124,6 @@ export function createAuthRoutes(config: AuthRoutesConfig): Router {
     async (req: AuthenticatedRequest, res) => {
       try {
         const { challengeId, publicKey, signature } = req.body;
-        const { challenge } = req.body; // From schema
 
         const result = await authService.authenticateWithSSHKey({
           challengeId,

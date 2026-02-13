@@ -50,9 +50,11 @@ function isOriginAllowed(origin: string | undefined, allowedOrigins: string[]): 
   // Check wildcard patterns (e.g., "https://*.example.com")
   for (const pattern of allowedOrigins) {
     if (pattern.includes('*')) {
-      const regex = new RegExp(
-        '^' + pattern.replace(/\./g, '\\.').replace(/\*/g, '.*') + '$'
-      );
+      // Escape all special regex characters, then replace \* with .*
+      const escapedPattern = pattern
+        .replace(/[.+?^${}()|[\]\\]/g, '\\$&')  // Escape all special chars including backslash
+        .replace(/\\\*/g, '.*');  // Replace escaped * with .*
+      const regex = new RegExp('^' + escapedPattern + '$');
       if (regex.test(origin)) {
         return true;
       }

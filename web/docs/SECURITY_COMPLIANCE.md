@@ -455,7 +455,7 @@ cat ~/.vibetunnel/audit.log | jq 'select(.category == "SECURITY")' | jq -s '.'
 ## Contact & Support
 
 For security issues or compliance questions:
-- Email: security@vibetunnel.dev (update with your contact)
+- Security Email: security@yourdomain.com (configure before production)
 - Report vulnerabilities: GitHub Security Advisories
 - Documentation: https://github.com/eliamure/vibetunnel/docs
 

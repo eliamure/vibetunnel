@@ -53,6 +53,8 @@ export const apiRateLimiter = rateLimit({
 /**
  * Strict rate limiter for sensitive operations
  * Limits to 3 attempts per hour per IP
+ * Note: This counts all requests, not just failed ones. For more precise
+ * failed-attempt tracking, implement custom logic in the auth route handler.
  */
 export const strictRateLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
@@ -68,5 +70,4 @@ export const strictRateLimiter = rateLimit({
       retryAfter: 3600, // 1 hour in seconds
     });
   },
-  skipSuccessfulRequests: true, // Only count failed requests
 });

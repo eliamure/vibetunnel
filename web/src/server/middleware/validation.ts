@@ -95,9 +95,9 @@ export const authChallengeSchema = z.object({
 
 // SSH key authentication request
 export const sshKeyAuthSchema = z.object({
+  challengeId: z.string().min(1, 'Challenge ID is required'),
   publicKey: z.string().min(1, 'Public key is required'),
   signature: z.string().min(1, 'Signature is required'),
-  challenge: z.string().min(1, 'Challenge is required'),
 });
 
 // Password authentication request

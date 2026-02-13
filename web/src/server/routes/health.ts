@@ -138,15 +138,12 @@ export function getMetricsCollector(): MetricsCollector {
 }
 
 /**
- * Get application version from package.json
+ * Get application version from package.json or environment
  */
+const APP_VERSION = process.env.VIBETUNNEL_VERSION || '1.0.0-beta.16';
+
 function getVersion(): string {
-  try {
-    // This will be replaced during build with actual version
-    return process.env.VIBETUNNEL_VERSION || '1.0.0-beta.16';
-  } catch {
-    return 'unknown';
-  }
+  return APP_VERSION;
 }
 
 /**
