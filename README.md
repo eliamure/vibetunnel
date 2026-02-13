@@ -234,6 +234,118 @@ Both Private and Public modes automatically provide **HTTPS access**:
 2. Run `cloudflared tunnel --url http://localhost:4020`
 3. Access via the generated `*.trycloudflare.com` URL
 
+### Option 5: Bore Tunnel (Self-Hosted Alternative)
+
+[Bore](https://github.com/ekzhang/bore) is a lightweight, self-hostable tunneling solution that creates secure tunnels to your localhost. It's perfect for those who want more control over their infrastructure or prefer open-source alternatives.
+
+**How it works**: Bore establishes a TCP tunnel from a public bore server to your local VibeTunnel instance, providing HTTPS access through the bore server's SSL termination.
+
+#### Quick Start
+
+**Using bore.pub (Public Server)**:
+```bash
+# Start VibeTunnel with bore tunnel
+vibetunnel --bore
+
+# This will:
+# 1. Download bore binaries automatically (if needed)
+# 2. Connect to bore.pub (public bore server)
+# 3. Display your public HTTPS URL
+```
+
+**Using Your Own Bore Server**:
+```bash
+# With self-hosted bore server
+vibetunnel --bore --bore-server tunnel.yourdomain.com
+
+# With authentication
+vibetunnel --bore --bore-server tunnel.yourdomain.com --bore-secret "your-secret"
+```
+
+#### Bore Binary Installation
+
+Bore binaries are **automatically downloaded** during npm installation for supported platforms:
+- Linux (x64, ARM64)
+- macOS (x64, ARM64/Apple Silicon)
+
+If automatic download fails, you can manually download bore:
+```bash
+cd web
+npm run download-bore
+```
+
+Or install bore globally:
+```bash
+# Using cargo (Rust)
+cargo install bore-cli
+
+# Using pre-built binaries
+# Download from: https://github.com/ekzhang/bore/releases
+```
+
+#### Benefits
+
+- **Open source** and self-hostable
+- **Lightweight** - minimal resource usage
+- **Fast** - direct TCP tunneling with low latency
+- **Flexible** - use public bore.pub or host your own server
+- **Simple** - no account required for basic usage
+- **HTTPS support** - bore servers handle SSL/TLS termination
+
+#### Setting Up Your Own Bore Server
+
+If you want complete control, you can host your own bore server:
+
+1. **Deploy bore server** on a VPS with a public IP:
+   ```bash
+   # Install bore
+   cargo install bore-cli
+   
+   # Run bore server
+   bore server --secret "your-server-secret"
+   ```
+
+2. **Configure DNS** for your domain:
+   ```
+   tunnel.yourdomain.com -> your-vps-ip
+   ```
+
+3. **Set up Nginx reverse proxy** for HTTPS (optional but recommended):
+   ```nginx
+   server {
+       listen 443 ssl http2;
+       server_name tunnel.yourdomain.com;
+       
+       ssl_certificate /path/to/cert.pem;
+       ssl_certificate_key /path/to/key.pem;
+       
+       location / {
+           proxy_pass http://localhost:7835;  # bore server port
+           proxy_set_header Host $host;
+           proxy_set_header Upgrade $http_upgrade;
+           proxy_set_header Connection "upgrade";
+       }
+   }
+   ```
+
+4. **Connect VibeTunnel** to your server:
+   ```bash
+   vibetunnel --bore --bore-server tunnel.yourdomain.com --bore-secret "your-server-secret"
+   ```
+
+#### Comparison with Other Options
+
+| Feature | Tailscale | ngrok | Cloudflare | Bore |
+|---------|-----------|-------|------------|------|
+| **Privacy** | Private network | Public URL | Public URL | Public URL |
+| **Self-hosted** | ❌ | ❌ | ❌ | ✅ |
+| **Free tier** | ✅ Generous | ✅ Limited | ✅ Limited | ✅ Unlimited |
+| **Setup** | Medium | Easy | Easy | Easy |
+| **Performance** | Excellent | Good | Good | Excellent |
+| **Custom domain** | Auto | Paid | Paid | Free (self-hosted) |
+
+**Note**: Bore is ideal for developers who want control over their infrastructure or need a simple, self-hosted tunneling solution without vendor lock-in.
+
 ## Git Follow Mode
 
 Git Follow Mode keeps your main repository checkout synchronized with the branch you're working on in a Git worktree. This allows agents to work in worktrees while your IDE, server, and other tools stay open on the main repository - they'll automatically update when the worktree switches branches.
