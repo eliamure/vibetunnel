@@ -41,8 +41,6 @@ export class BoreService {
     let boreTarget: string;
     if (platform === 'linux' && arch === 'x64') {
       boreTarget = 'linux-x64';
-    } else if (platform === 'linux' && arch === 'arm64') {
-      boreTarget = 'linux-arm64';
     } else if (platform === 'darwin' && arch === 'x64') {
       boreTarget = 'darwin-x64';
     } else if (platform === 'darwin' && arch === 'arm64') {

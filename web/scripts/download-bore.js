@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /**
  * Download bore binaries from GitHub releases
- * 
+ *
  * This script downloads bore binaries for different platforms to support
  * the bore tunnel integration in VibeTunnel.
- * 
+ *
  * Bore releases: https://github.com/ekzhang/bore/releases
  */
 

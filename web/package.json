@@ -46,7 +46,7 @@
     "build:ci": "node scripts/build-ci.js",
     "build:npm": "node scripts/build-npm.js",
     "prepublishOnly": "npm run build:npm",
-    "postinstall": "node scripts/postinstall-npm.js && node scripts/download-bore.js || true",
+    "postinstall": "node scripts/postinstall-npm.js && (node scripts/download-bore.js || true)",
     "download-bore": "node scripts/download-bore.js",
     "prebuild": "echo 'Skipping prebuild - handled by build-npm.js'",
     "prebuild:upload": "echo 'Skipping prebuild:upload - not used'",
