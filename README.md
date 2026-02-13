@@ -11,7 +11,6 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-green" alt="License"></a>
-  <img src="https://img.shields.io/badge/macOS-14.0+-red" alt="macOS 14.0+">
   <img src="https://img.shields.io/badge/Linux-Supported-brightgreen" alt="Linux Support">
   <img src="https://img.shields.io/badge/Node.js-22.12%2B-339933?logo=node.js" alt="Node.js 22.12+">
 </p>
@@ -19,7 +18,7 @@
 ## Table of Contents
 
 - [Why VibeTunnel?](#why-vibetunnel)
-- [Installation Options](#installation-options)
+- [Installation](#installation)
 - [Quick Start](#quick-start)
 - [Features](#features)
 - [Architecture](#architecture)
@@ -27,53 +26,45 @@
 - [Git Follow Mode](#git-follow-mode)
 - [Terminal Title Management](#terminal-title-management)
 - [Authentication](#authentication)
-- [npm Package](#npm-package)
 - [Building from Source](#building-from-source)
 - [Development](#development)
 - [Poltergeist Integration](#poltergeist-integration)
 - [Documentation](#documentation)
-- [macOS Permissions](#macos-permissions)
 - [License](#license)
 
 ## Why VibeTunnel?
 
 Ever wanted to check on your AI agents while you're away? Need to monitor that long-running build from your phone? Want to share a terminal session with a colleague without complex SSH setups? VibeTunnel makes it happen with zero friction.
 
-## Installation Options
+## Installation
 
-### macOS App (Recommended for Mac users)
-The native macOS app provides the best experience with menu bar integration and automatic updates.
-
-### npm Package (Linux & Headless Systems)
-For Linux servers, Docker containers, or headless macOS systems, install via npm:
+Install VibeTunnel via npm:
 
 ```bash
 npm install -g vibetunnel
 ```
 
-This gives you the full VibeTunnel server with web UI, just without the macOS menu bar app. See the [npm Package section](#npm-package) for detailed usage.
+This gives you the full VibeTunnel server with web UI for Linux systems.
 
 ## Quick Start
 
 ### Requirements
 
-**macOS App**: Requires an Apple Silicon Mac (M1+). Intel Macs are not supported for the native app.
+Works on any system with Node.js 22.12+.
 
-**npm Package**: Works on any system with Node.js 22.12+, including Intel Macs and Linux.
+### 1. Install VibeTunnel
 
-### 1. Download & Install
-
-#### Option 1: Direct Download
-Build from source (see Building from Source section)
-
-#### Option 2: Homebrew
 ```bash
-brew install --cask vibetunnel
+npm install -g vibetunnel
 ```
 
 ### 2. Launch VibeTunnel
 
-VibeTunnel lives in your menu bar. Click the icon to start the server.
+Start the VibeTunnel server:
+
+```bash
+vibetunnel
+```
 
 ### 3. Use the `vt` Command
 
@@ -82,18 +73,7 @@ The `vt` command is a smart wrapper that forwards your terminal sessions through
 **How it works**:
 - `vt` is a bash script that internally calls `vibetunnel fwd` to forward terminal output
 - It provides additional features like shell alias resolution and session title management
-- Available from both the Mac app and npm package installations
-
-**Installation sources**:
-- **macOS App**: Creates `/usr/local/bin/vt` symlink during installation
-- **npm Package**: Installs `vt` globally, with intelligent Mac app detection
-
-**Smart detection**:
-When you run `vt` from the npm package, it:
-1. Checks if the Mac app is installed at `/Applications/VibeTunnel.app`
-2. If found, forwards to the Mac app's `vt` for the best experience
-3. If not found, uses the npm-installed `vibetunnel fwd`
-4. This ensures `vt` always uses the best available implementation
+- Installed globally with the npm package
 
 ```bash
 # Run any command in the browser
@@ -116,44 +96,30 @@ vt unfollow       # Stop following
 # For more examples and options, see "The vt Forwarding Command" section below
 ```
 
-### Git Repository Scanning on First Session
-
-When opening a new session for the first time, VibeTunnel's working directory scanner will look for Git repositories. By default, this scans your home directory, which may trigger macOS permission prompts for accessing protected folders (like Desktop, Documents, Downloads, iCloud Drive, or external volumes).
-
-To avoid these prompts:
-- **Option 1**: Navigate to your actual projects directory before opening a session
-- **Option 2**: Accept the one-time permission prompts (they won't appear again)
-
-This only happens on the first session when the scanner discovers your Git repositories. For more details about macOS privacy-protected folders, see [this explanation](https://eclecticlight.co/2025/02/24/gaining-access-to-privacy-protected-folders/).
-
 ### 4. Open Your Dashboard
 
 Visit [http://localhost:4020](http://localhost:4020) to see all your terminal sessions.
 
 ## Features
 
-- **🌐 Browser-Based Access** - Control your Mac terminal from any device with a web browser
+- **🌐 Browser-Based Access** - Control your terminal from any device with a web browser
 - **🚀 Zero Configuration** - No SSH keys, no port forwarding, no complexity
 - **🤖 AI Agent Friendly** - Perfect for monitoring Claude Code, ChatGPT, or any terminal-based AI tools
 - **📊 Session Activity Indicators** - Real-time activity tracking shows which sessions are active or idle
 - **🔄 Git Follow Mode** - Terminal automatically follows your IDE's branch switching
-- **⌨️ Smart Keyboard Handling** - Intelligent shortcut routing with toggleable capture modes. When capture is active, use Cmd+1...9/0 (Mac) or Ctrl+1...9/0 (Linux) to quickly switch between sessions
+- **⌨️ Smart Keyboard Handling** - Intelligent shortcut routing with toggleable capture modes. When capture is active, use Ctrl+1...9/0 to quickly switch between sessions
 - **🔒 Secure by Design** - Multiple authentication modes, localhost-only mode, or secure tunneling via Tailscale/ngrok
-- **📱 Mobile Ready** - Native iOS app and responsive web interface for phones and tablets
+- **📱 Mobile Ready** - Responsive web interface for phones and tablets
 - **🎬 Session Recording** - All sessions recorded in asciinema format for later playback
 - **⚡ High Performance** - Optimized Node.js server with minimal resource usage
-- **🍎 Apple Silicon Native** - Optimized for Apple Silicon (M1+) Macs with ARM64-only binaries
 - **🐚 Shell Alias Support** - Your custom aliases and shell functions work automatically
-
-> **Note**: The iOS app is still work in progress and not recommended for production use yet.
 
 ## Architecture
 
-VibeTunnel consists of three main components:
+VibeTunnel consists of two main components:
 
-1. **macOS Menu Bar App** - Native Swift application that manages the server lifecycle
-2. **Node.js Server** - High-performance TypeScript server handling terminal sessions
-3. **Web Frontend** - Modern web interface using Lit components and ghostty-web
+1. **Node.js Server** - High-performance TypeScript server handling terminal sessions
+2. **Web Frontend** - Modern web interface using Lit components and ghostty-web
 
 The server runs as a standalone Node.js executable with embedded modules, providing excellent performance and minimal resource usage.
 
@@ -166,14 +132,13 @@ The server runs as a standalone Node.js executable with embedded modules, provid
 **How it works**: Tailscale creates an encrypted WireGuard tunnel between your devices, allowing them to communicate as if they were on the same local network, regardless of their physical location.
 
 #### Basic Setup
-1. Install Tailscale on your Mac: [Download from Mac App Store](https://apps.apple.com/us/app/tailscale/id1475387142) or [Direct Download](https://tailscale.com/download/macos)
+1. Install Tailscale on your Linux machine: [All Downloads](https://tailscale.com/download)
 2. Install Tailscale on your remote device:
-   - **iOS**: [Download from App Store](https://apps.apple.com/us/app/tailscale/id1470499037)
    - **Android**: [Download from Google Play](https://play.google.com/store/apps/details?id=com.tailscale.ipn)
    - **Other platforms**: [All Downloads](https://tailscale.com/download)
 3. Sign in to both devices with the same account
 4. If using VibeTunnel's Tailscale Serve integration, ensure Tailscale Serve is enabled in your [tailnet settings](https://login.tailscale.com/f/serve)
-5. Find your Mac's Tailscale hostname in the Tailscale menu bar app (e.g., `my-mac.tailnet-name.ts.net`)
+5. Find your machine's Tailscale hostname in the Tailscale CLI (e.g., `my-machine.tailnet-name.ts.net`)
 6. Access VibeTunnel at `http://[your-tailscale-hostname]:4020`
 
 #### Enhanced Tailscale Features
@@ -262,7 +227,7 @@ Both Private and Public modes automatically provide **HTTPS access**:
 ### Option 3: Local Network
 1. Configure authentication (see Authentication section)
 2. Switch to "Network" mode
-3. Access via `http://[your-mac-ip]:4020`
+3. Access via `http://[your-machine-ip]:4020`
 
 ### Option 4: Cloudflare Quick Tunnel
 1. Install [cloudflared](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/)
@@ -277,7 +242,7 @@ Git Follow Mode keeps your main repository checkout synchronized with the branch
 
 Follow mode creates a seamless workflow for agent-assisted development:
 - Agents work in worktrees → Main repository automatically follows their branch switches
-- Keep Xcode/IDE open → It updates automatically without reopening projects
+- Keep your IDE open → It updates automatically without reopening projects
 - Server stays running → No need to restart servers in different folders
 - Zero manual intervention → Main repo stays in sync with active development
 
@@ -320,7 +285,7 @@ cd ../project && vt follow
 
 # Agent works in the worktree while you stay in main repo
 # When agent switches branches in worktree, your main repo follows!
-# Your Xcode/IDE and servers stay running without interruption
+# Your IDE and servers stay running without interruption
 ```
 
 
@@ -361,7 +326,6 @@ VibeTunnel provides multiple authentication modes to secure your terminal sessio
 
 #### 1. System Authentication (Default)
 Uses your operating system's native authentication:
-- **macOS**: Authenticates against local user accounts
 - **Linux**: Uses PAM (Pluggable Authentication Modules)
 - Login with your system username and password
 
@@ -405,14 +369,6 @@ npm run start -- --allow-local-bypass --local-auth-token mytoken
 - **Always use tokens**: In production, always require `--local-auth-token`
 - **Consider alternatives**: For production, use proper authentication instead of local bypass
 
-### macOS App Authentication
-
-The macOS menu bar app supports these authentication modes:
-- **No Authentication**: For trusted environments only
-- **System Authentication**: Uses your macOS user account credentials
-- **SSH Key Authentication**: Uses Ed25519 SSH keys from `~/.ssh/authorized_keys`
-- Configure via Settings → Security when in "Network" mode
-
 ### Security Best Practices
 
 1. **Always use authentication** when binding to network interfaces (`--bind 0.0.0.0`)
@@ -428,94 +384,7 @@ The macOS menu bar app supports these authentication modes:
 If SSH key generation fails with crypto errors, see the [detailed troubleshooting guide](web/README.md#ssh-key-authentication-issues) for solutions.
 
 
-## npm Package
-
-The VibeTunnel npm package provides the full server functionality for Linux, Docker, CI/CD environments, and headless macOS systems.
-
-### Installation
-
-```bash
-# Install globally via npm
-npm install -g vibetunnel
-
-# Or with yarn
-yarn global add vibetunnel
-
-# Or with pnpm
-pnpm add -g vibetunnel
-```
-
-**Requirements**: Node.js 22.12.0 or higher
-
-### One-shot (no install)
-
-```bash
-# Start local server (no auth)
-npx -y vibetunnel --no-auth
-
-# Quick remote share (ngrok)
-npx -y vibetunnel --no-auth --ngrok
-
-# One-shot vt wrapper
-npx -y --package vibetunnel vt npm test
-```
-
-### Running the VibeTunnel Server
-
-#### Basic Usage
-
-```bash
-# Start with default settings (localhost:4020)
-vibetunnel
-
-# Bind to all network interfaces
-vibetunnel --bind 0.0.0.0
-
-# Use a custom port
-vibetunnel --port 8080
-
-# With authentication
-VIBETUNNEL_USERNAME=admin VIBETUNNEL_PASSWORD=secure vibetunnel --bind 0.0.0.0
-
-# Enable debug logging
-VIBETUNNEL_DEBUG=1 vibetunnel
-
-# Run without authentication (trusted networks only!)
-vibetunnel --no-auth
-```
-
-#### Using the `vt` Command
-
-The `vt` command wrapper makes it easy to forward terminal sessions:
-
-```bash
-# Run any command and see it in the browser
-vt npm test
-vt python script.py
-vt cargo build --release
-
-# Open an interactive shell
-vt --shell
-vt -i  # short form
-
-# Control terminal titles
-vt --title-mode static npm run dev     # Shows path and command
-vt --title-mode filter vim             # Blocks vim from changing title
-
-# Control output verbosity
-vt -q npm test         # Quiet mode - no console output
-vt -v npm run dev      # Verbose mode - show more information
-vt -vv cargo build     # Extra verbose - all except debug
-vt -vvv python app.py  # Debug mode - show everything
-
-# Shell aliases work automatically!
-vt claude-danger  # Your custom alias for claude --dangerously-skip-permissions
-
-# Update session title (inside a VibeTunnel session)
-vt title "My Project - Testing"
-```
-
-### The `vt` Forwarding Command
+## The `vt` Forwarding Command
 
 The `vt` command is VibeTunnel's terminal forwarding wrapper that allows you to run any command while making its output visible in the browser. Under the hood, `vt` is a convenient shortcut for `vibetunnel fwd` - it's a bash script that calls the full command with proper path resolution and additional features like shell alias support. The `vt` wrapper acts as a transparent proxy between your terminal and the command, forwarding all input and output through VibeTunnel's infrastructure.
 
@@ -610,27 +479,6 @@ vt gs  # Works as expected
 vt title "Building Production Release"
 ```
 
-### Mac App Interoperability
-
-The npm package is designed to work seamlessly alongside the Mac app:
-
-#### Smart Command Routing
-- The `vt` command automatically detects if the Mac app is installed
-- If found at `/Applications/VibeTunnel.app`, it defers to the Mac app
-- If not found, it uses the npm-installed server
-- This ensures you always get the best available implementation
-
-#### Installation Behavior
-- If `/usr/local/bin/vt` already exists (from another tool), npm won't overwrite it
-- You'll see a helpful warning with alternatives: `vibetunnel` or `npx vt`
-- The installation always succeeds, even if the `vt` symlink can't be created
-
-#### When to Use Each Version
-- **Mac app only**: Best for macOS users who want menu bar integration
-- **npm only**: Perfect for Linux, Docker, CI/CD, or headless servers
-- **Both installed**: Mac app takes precedence, npm serves as fallback
-- **Development**: npm package useful for testing without affecting Mac app
-
 ### Package Contents
 
 The npm package includes:
@@ -638,7 +486,6 @@ The npm package includes:
 - CLI tools (`vibetunnel` and `vt` commands)
 - Native PTY support via node-pty
 - Pre-built binaries for common platforms
-- Complete feature parity with macOS app (minus menu bar)
 
 ### Building the npm Package
 
@@ -652,7 +499,6 @@ npm run build:npm
 ```
 
 This creates prebuilt binaries for:
-- macOS (x64, arm64) - Node.js 22, 23, 24
 - Linux (x64, arm64) - Node.js 22, 23, 24
 
 #### Build Options
@@ -679,8 +525,7 @@ npm publish
 ## Building from Source
 
 ### Prerequisites
-- macOS 14.0+ (Sonoma) on Apple Silicon (M1+)
-- Xcode 16.0+
+- Linux system
 - Node.js 22.12+ (minimum supported version)
 
 ### Build Steps
@@ -689,23 +534,6 @@ npm publish
 # Clone the repository
 git clone https://github.com/YOUR_ENTERPRISE/vibetunnel.git
 cd vibetunnel
-
-# Set up code signing (required for macOS/iOS development)
-# Create Local.xcconfig files with your Apple Developer Team ID
-# Note: These files must be in the same directory as Shared.xcconfig
-cat > mac/VibeTunnel/Local.xcconfig << EOF
-// Local Development Configuration
-// DO NOT commit this file to version control
-DEVELOPMENT_TEAM = YOUR_TEAM_ID
-CODE_SIGN_STYLE = Automatic
-EOF
-
-cat > ios/VibeTunnel/Local.xcconfig << EOF
-// Local Development Configuration  
-// DO NOT commit this file to version control
-DEVELOPMENT_TEAM = YOUR_TEAM_ID
-CODE_SIGN_STYLE = Automatic
-EOF
 
 # Build the web server
 cd web
@@ -716,10 +544,6 @@ pnpm run build
 # export VIBETUNNEL_USE_CUSTOM_NODE=YES
 # node build-custom-node.js  # Build optimized Node.js (one-time, ~20 min)
 # pnpm run build              # Will use custom Node.js automatically
-
-# Build the macOS app
-cd ../mac
-./scripts/build.sh --configuration Release
 ```
 
 ### Custom Node.js Builds
@@ -732,9 +556,6 @@ node build-custom-node.js
 
 # Use environment variable for all builds
 export VIBETUNNEL_USE_CUSTOM_NODE=YES
-
-# Or use in Xcode Build Settings
-# Add User-Defined Setting: VIBETUNNEL_USE_CUSTOM_NODE = YES
 ```
 
 See [Custom Node Build Flags](docs/custom-node-build-flags.md) for detailed optimization information.
@@ -742,31 +563,19 @@ See [Custom Node Build Flags](docs/custom-node-build-flags.md) for detailed opti
 ## Development
 
 ### Key Files
-- **macOS App**: `mac/VibeTunnel/VibeTunnelApp.swift`
 - **Server**: `web/src/server/` (TypeScript/Node.js)
 - **Web UI**: `web/src/client/` (Lit/TypeScript)
-- **iOS App**: `ios/VibeTunnel/`
 
 ### Testing & Code Coverage
 
-VibeTunnel has comprehensive test suites with code coverage enabled for all projects:
+VibeTunnel has comprehensive test suites with code coverage enabled:
 
 ```bash
-# Run all tests with coverage
-./scripts/test-all-coverage.sh
-
-# macOS tests with coverage (Swift Testing)
-cd mac && swift test --enable-code-coverage
-
-# iOS tests with coverage (using xcodebuild)
-cd ios && ./scripts/test-with-coverage.sh
-
 # Web tests with coverage (Vitest)
 cd web && ./scripts/coverage-report.sh
 ```
 
 **Coverage Requirements**:
-- macOS/iOS: 75% minimum (enforced in CI)
 - Web: 80% minimum for lines, functions, branches, and statements
 
 ### Development Server & Hot Reload
@@ -815,9 +624,9 @@ When developing the web interface, you often need to test changes on external de
 
 ##### Important Notes
 
-- **Port conflict**: The Mac app runs on port 4020, so use a different port (e.g., 4021) for development
+- **Port conflict**: Use a different port (e.g., 4021) if port 4020 is already in use
 - **Same network**: Ensure both devices are on the same Wi-Fi network
-- **Firewall**: macOS may prompt to allow incoming connections - click "Allow"
+- **Firewall**: Allow incoming connections when prompted
 - **Auto-rebuild**: Changes to the web code are automatically rebuilt, but you need to manually refresh the browser
 
 ##### Pasting on Mobile Devices
@@ -887,24 +696,6 @@ VIBETUNNEL_DEBUG=1 vt your-command
 
 Debug logs are written to `~/.vibetunnel/log.txt`.
 
-### Using Development Builds with vt
-
-When developing VibeTunnel, you can use the `VIBETUNNEL_PREFER_DERIVED_DATA` environment variable to make the `vt` command prefer development builds from Xcode's DerivedData folder:
-
-```bash
-# Enable DerivedData preference
-export VIBETUNNEL_PREFER_DERIVED_DATA=1
-
-# vt will now search for and use the latest VibeTunnel build from DerivedData
-vt your-command
-```
-
-When this environment variable is set, `vt` will:
-1. First search for VibeTunnel builds in `~/Library/Developer/Xcode/DerivedData`
-2. Use the most recently modified build found there
-3. Fall back to `/Applications/VibeTunnel.app` if no DerivedData build exists
-4. Log the exact binary location, version, and build timestamp being used
-
 This is particularly useful for:
 - Testing changes without installing to `/Applications`
 - Working with multiple VibeTunnel builds simultaneously
@@ -943,7 +734,7 @@ VIBETUNNEL_LOG_LEVEL=silent vt npm test
 
 ## Poltergeist Integration
 
-[Poltergeist](https://github.com/steipete/poltergeist) is an intelligent file watcher and auto-builder that can automatically rebuild VibeTunnel as you develop. This is particularly useful for native app development where manual rebuilds can interrupt your flow.
+[Poltergeist](https://github.com/steipete/poltergeist) is an intelligent file watcher and auto-builder that can automatically rebuild VibeTunnel as you develop.
 
 ### Setting Up Poltergeist
 
@@ -959,25 +750,18 @@ VIBETUNNEL_LOG_LEVEL=silent vt npm test
    ```
 
 3. **Make changes** - Poltergeist will automatically rebuild when it detects changes to:
-   - Swift files in `mac/` or `ios/`
-   - Xcode project files
+   - TypeScript/JavaScript files in `web/`
    - Configuration files
 
 ### Poltergeist Features
 
 - **Automatic Rebuilds**: Detects file changes and rebuilds instantly
 - **Smart Debouncing**: Prevents excessive rebuilds during rapid edits
-- **Build Notifications**: macOS notifications for build success/failure
-- **Menu Bar Integration**: Monitor build status from the macOS menu bar
-- **Parallel Builds**: Can build macOS and iOS targets simultaneously
+- **Build Notifications**: Notifications for build success/failure
 
 ### Configuration
 
-VibeTunnel includes a `poltergeist.config.json` that configures:
-- **vibetunnel** target: Builds the macOS app in Debug configuration
-- **vibetunnel-ios** target: Builds the iOS app (disabled by default)
-
-To enable iOS builds, edit `poltergeist.config.json` and set `"enabled": true` for the vibetunnel-ios target.
+VibeTunnel includes a `poltergeist.config.json` that can be used to configure build targets and automation.
 
 ## Documentation
 
@@ -986,108 +770,6 @@ To enable iOS builds, edit `poltergeist.config.json` and set `"enabled": true` f
 - [Architecture](docs/architecture.md) - System design overview
 - [Build System](docs/build-system.md) - Build process details
 - [Push Notifications](docs/push-notification.md) - How web push notifications work
-
-## macOS Permissions
-
-macOS is finicky when it comes to permissions. The system will only remember the first path from where an app requests permissions. If subsequently the app starts somewhere else, it will silently fail. Fix: Delete the entry and restart settings, restart app and next time the permission is requested, there should be an entry in Settings again.
-
-Important: You need to set your Developer ID in Local.xcconfig. If apps are signed Ad-Hoc, each new signing will count as a new app for macOS and the permissions have to be (deleted and) requested again.
-
-**Debug vs Release Bundle IDs**: The Debug configuration uses a different bundle identifier (`sh.vibetunnel.vibetunnel.debug`) than Release (`sh.vibetunnel.vibetunnel`). This allows you to have both versions installed simultaneously, but macOS treats them as separate apps for permissions. You'll need to grant permissions separately for each version.
-
-If that fails, use the terminal to reset:
-
-```
-# This removes Accessibility permission for a specific bundle ID:
-sudo tccutil reset Accessibility sh.vibetunnel.vibetunnel
-sudo tccutil reset Accessibility sh.vibetunnel.vibetunnel.debug  # For debug builds
-
-sudo tccutil reset ScreenCapture sh.vibetunnel.vibetunnel
-sudo tccutil reset ScreenCapture sh.vibetunnel.vibetunnel.debug  # For debug builds
-
-# This removes all Automation permissions system-wide (cannot target specific apps):
-sudo tccutil reset AppleEvents
-```
-
-## Logging and Privacy
-
-VibeTunnel uses Apple's unified logging system with the subsystem `sh.vibetunnel.vibetunnel`. By default, macOS redacts sensitive runtime data in logs, showing `<private>` instead of actual values. This is a privacy feature to prevent accidental exposure of sensitive information.
-
-### Bundle Identifiers
-
-VibeTunnel uses the following bundle identifiers:
-
-**Production:**
-- `sh.vibetunnel.vibetunnel` - Main macOS app and logging subsystem
-- `sh.vibetunnel.vibetunnel.debug` - Debug builds of the macOS app
-
-**Testing:**
-- `sh.vibetunnel.vibetunnel.tests` - macOS test suite
-- `sh.vibetunnel.ios.tests` - iOS test suite
-
-**iOS:**
-- `sh.vibetunnel.ios` - iOS keychain service and URL scheme
-
-### Viewing Unredacted Logs
-
-To see full log details for debugging, you have several options:
-
-1. **Install the Configuration Profile** (Recommended - easiest method):
-   ```bash
-   # Install the logging configuration profile
-   open apple/logging/VibeTunnel-Logging.mobileconfig
-   
-   # This enables debug logging for all VibeTunnel components
-   # To remove later: System Settings → Privacy & Security → Profiles
-   ```
-
-2. **Use the vtlog script** (convenient log viewer):
-   ```bash
-   # View recent logs (requires configuration profile or sudo)
-   ./scripts/vtlog.sh
-   
-   # Follow logs in real-time
-   ./scripts/vtlog.sh -f
-   
-   # Show only errors
-   ./scripts/vtlog.sh -e
-   
-   # Filter by category
-   ./scripts/vtlog.sh -c ServerManager
-   ```
-
-3. **Configure passwordless sudo** (alternative for vtlog with -p flag):
-   ```bash
-   # Add to sudoers (replace 'yourusername' with your actual username)
-   sudo visudo
-   # Add this line:
-   yourusername ALL=(ALL) NOPASSWD: /usr/bin/log
-   
-   # Then use vtlog with private flag
-   ./scripts/vtlog.sh -p
-   ```
-
-4. **Enable private data logging** using a plist file (alternative):
-   ```bash
-   # Create the plist to enable private data for VibeTunnel
-   sudo mkdir -p /Library/Preferences/Logging/Subsystems
-   sudo tee /Library/Preferences/Logging/Subsystems/sh.vibetunnel.vibetunnel.plist > /dev/null << 'EOF'
-   <?xml version="1.0" encoding="UTF-8"?>
-   <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-   <plist version="1.0">
-   <dict>
-       <key>Enable-Private-Data</key>
-       <true/>
-   </dict>
-   </plist>
-   EOF
-   ```
-
-### Why Logs Show `<private>`
-
-Apple redacts dynamic values in logs by default to protect user privacy. This prevents accidental logging of passwords, tokens, or personal information. Our configuration profile or the methods above enable full visibility for development and debugging.
-
-For more detailed information about logging privacy and additional methods, see [apple/docs/logging-private-fix.md](apple/docs/logging-private-fix.md).
 
 ## License
 
