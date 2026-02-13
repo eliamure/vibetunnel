@@ -88,7 +88,7 @@ interface ConnectionInfo {
 interface GlobalTunnelState {
   __ngrokService?: NgrokService;
   __cloudflareService?: CloudflareService;
-  __boreService?: import('./services/bore-service.js').BoreService;
+  __boreService?: BoreService;
 }
 
 const globalTunnelState = global as typeof global & GlobalTunnelState;

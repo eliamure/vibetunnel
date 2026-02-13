@@ -39,7 +39,9 @@ function downloadFile(url, destPath) {
       // Handle redirects
       if (response.statusCode === 302 || response.statusCode === 301) {
         file.close();
-        fs.unlinkSync(destPath);
+        if (fs.existsSync(destPath)) {
+          fs.unlinkSync(destPath);
+        }
         downloadFile(response.headers.location, destPath)
           .then(resolve)
           .catch(reject);
@@ -48,7 +50,9 @@ function downloadFile(url, destPath) {
       
       if (response.statusCode !== 200) {
         file.close();
-        fs.unlinkSync(destPath);
+        if (fs.existsSync(destPath)) {
+          fs.unlinkSync(destPath);
+        }
         reject(new Error(`Failed to download: HTTP ${response.statusCode}`));
         return;
       }
