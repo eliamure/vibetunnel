@@ -30,6 +30,9 @@ import { createSessionRoutes } from './routes/sessions.js';
 import { createTestNotificationRouter } from './routes/test-notification.js';
 import { createTmuxRoutes } from './routes/tmux.js';
 import { createWorktreeRoutes } from './routes/worktrees.js';
+import { createHealthRoutes } from './routes/health.js';
+import { getAuditLogger, initAuditLogger, AuditSeverity } from './services/audit-logger.js';
+import { getMetricsCollector } from './routes/health.js';
 import { AuthService } from './services/auth-service.js';
 import { CastOutputHub } from './services/cast-output-hub.js';
 import { CloudflareService } from './services/cloudflare-service.js';
@@ -595,13 +598,23 @@ export async function createApp(): Promise<AppInstance> {
     logger.debug('Push notifications disabled');
   }
 
-  // Connect SessionMonitor to push notification service
+  // Connect SessionMonitor to push notification service and metrics collector
+  const metricsCollector = getMetricsCollector();
   if (sessionMonitor && pushNotificationService) {
     logger.info('Connecting SessionMonitor to push notification service');
 
     // Listen for session monitor notifications and send push notifications
     sessionMonitor.on('notification', async (event) => {
       try {
+        // Track session events in metrics and audit logs
+        if (event.type === ServerEventType.SessionStart) {
+          metricsCollector.recordSessionStart(event.sessionId);
+          auditLogger.logSessionStart(event.sessionId, event.userId || 'unknown', event.command);
+        } else if (event.type === ServerEventType.SessionExit) {
+          metricsCollector.recordSessionEnd(event.sessionId);
+          auditLogger.logSessionEnd(event.sessionId, event.userId || 'unknown', event.exitCode);
+        }
+
         // Map event types to push notification data
         let pushPayload = null;
 
@@ -716,6 +729,15 @@ export async function createApp(): Promise<AppInstance> {
   // Initialize authentication service
   const authService = new AuthService();
   logger.debug('Initialized authentication service');
+
+  // Initialize audit logging
+  const auditLogger = initAuditLogger({
+    enabled: true,
+    logToConsole: config.debug,
+    minSeverity: config.debug ? AuditSeverity.INFO : AuditSeverity.WARNING,
+  });
+  logger.log(chalk.green('Audit logging: ENABLED'));
+  logger.debug('Audit logs will be written to ~/.vibetunnel/audit.log');
 
   // Initialize v3 WebSocket hub (single-socket terminal transport)
   const wsV3Hub = new WsV3Hub({
@@ -1057,6 +1079,10 @@ export async function createApp(): Promise<AppInstance> {
     });
     logger.debug('Connected command finished notifications to PTY manager');
   }
+
+  // Mount health and metrics routes (no auth required)
+  app.use('/', createHealthRoutes());
+  logger.debug('Mounted health and metrics routes');
 
   // Apply auth middleware to all API routes (including auth routes for Tailscale header detection)
   app.use('/api', authMiddleware);

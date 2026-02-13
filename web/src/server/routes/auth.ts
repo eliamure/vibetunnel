@@ -2,6 +2,15 @@ import { Router } from 'express';
 import { promisify } from 'util';
 import type { AuthenticatedRequest, TailscaleUser } from '../middleware/auth.js';
 import type { AuthService } from '../services/auth-service.js';
+import { authRateLimiter, strictRateLimiter } from '../middleware/rate-limit.js';
+import { getAuditLogger, AuditSeverity } from '../services/audit-logger.js';
+import {
+  validateBody,
+  authChallengeSchema,
+  sshKeyAuthSchema,
+  passwordAuthSchema,
+  sanitizeString,
+} from '../middleware/validation.js';
 
 interface AuthRoutesConfig {
   authService: AuthService;
@@ -35,112 +44,193 @@ function getTailscaleLogin(req: AuthenticatedRequest): string | undefined {
 export function createAuthRoutes(config: AuthRoutesConfig): Router {
   const router = Router();
   const { authService } = config;
+  const auditLogger = getAuditLogger();
 
   /**
    * Create authentication challenge for SSH key auth
    * POST /api/auth/challenge
    */
-  router.post('/challenge', async (req, res) => {
-    try {
-      const { userId } = req.body;
+  router.post(
+    '/challenge',
+    authRateLimiter,
+    validateBody(authChallengeSchema),
+    async (req: AuthenticatedRequest, res) => {
+      try {
+        const { userId, publicKey } = req.body;
+        
+        // Support both userId and publicKey-based identification
+        const user = userId || (publicKey ? sanitizeString(publicKey.split(' ')[2] || 'unknown', 255) : undefined);
+        
+        if (!user) {
+          auditLogger.logAuthFailure(
+            'unknown',
+            'ssh-key',
+            'User ID or public key is required',
+            req.ip,
+            req.get('user-agent')
+          );
+          return res.status(400).json({ error: 'User ID or public key is required' });
+        }
 
-      if (!userId) {
-        return res.status(400).json({ error: 'User ID is required' });
+        // Check if user exists
+        const userExists = await authService.userExists(user);
+        if (!userExists) {
+          auditLogger.logAuthFailure(
+            user,
+            'ssh-key',
+            'User not found',
+            req.ip,
+            req.get('user-agent')
+          );
+          return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Create challenge
+        const challenge = authService.createChallenge(user);
+
+        auditLogger.logSecurityEvent(
+          'Authentication challenge created',
+          AuditSeverity.INFO,
+          { userId: user, challengeId: challenge.challengeId },
+          req.ip
+        );
+
+        res.json({
+          challengeId: challenge.challengeId,
+          challenge: challenge.challenge,
+          expiresAt: Date.now() + 5 * 60 * 1000, // 5 minutes
+        });
+      } catch (error) {
+        console.error('Error creating auth challenge:', error);
+        auditLogger.logSecurityEvent(
+          'Failed to create authentication challenge',
+          AuditSeverity.ERROR,
+          { error: String(error) },
+          req.ip
+        );
+        res.status(500).json({ error: 'Failed to create authentication challenge' });
       }
-
-      // Check if user exists
-      const userExists = await authService.userExists(userId);
-      if (!userExists) {
-        return res.status(404).json({ error: 'User not found' });
-      }
-
-      // Create challenge
-      const challenge = authService.createChallenge(userId);
-
-      res.json({
-        challengeId: challenge.challengeId,
-        challenge: challenge.challenge,
-        expiresAt: Date.now() + 5 * 60 * 1000, // 5 minutes
-      });
-    } catch (error) {
-      console.error('Error creating auth challenge:', error);
-      res.status(500).json({ error: 'Failed to create authentication challenge' });
     }
-  });
+  );
 
   /**
    * Authenticate with SSH key
    * POST /api/auth/ssh-key
    */
-  router.post('/ssh-key', async (req, res) => {
-    try {
-      const { challengeId, publicKey, signature } = req.body;
+  router.post(
+    '/ssh-key',
+    authRateLimiter,
+    validateBody(sshKeyAuthSchema),
+    async (req: AuthenticatedRequest, res) => {
+      try {
+        const { challengeId, publicKey, signature } = req.body;
 
-      if (!challengeId || !publicKey || !signature) {
-        return res.status(400).json({
-          error: 'Challenge ID, public key, and signature are required',
+        const result = await authService.authenticateWithSSHKey({
+          challengeId,
+          publicKey,
+          signature,
         });
+
+        if (result.success) {
+          auditLogger.logAuthSuccess(
+            result.userId || 'unknown',
+            'ssh-key',
+            req.ip,
+            req.get('user-agent')
+          );
+
+          res.json({
+            success: true,
+            token: result.token,
+            userId: result.userId,
+            authMethod: 'ssh-key',
+          });
+        } else {
+          auditLogger.logAuthFailure(
+            result.userId || 'unknown',
+            'ssh-key',
+            result.error || 'Authentication failed',
+            req.ip,
+            req.get('user-agent')
+          );
+
+          res.status(401).json({
+            success: false,
+            error: result.error,
+          });
+        }
+      } catch (error) {
+        console.error('Error authenticating with SSH key:', error);
+        auditLogger.logSecurityEvent(
+          'SSH key authentication error',
+          AuditSeverity.ERROR,
+          { error: String(error) },
+          req.ip
+        );
+        res.status(500).json({ error: 'SSH key authentication failed' });
       }
-
-      const result = await authService.authenticateWithSSHKey({
-        challengeId,
-        publicKey,
-        signature,
-      });
-
-      if (result.success) {
-        res.json({
-          success: true,
-          token: result.token,
-          userId: result.userId,
-          authMethod: 'ssh-key',
-        });
-      } else {
-        res.status(401).json({
-          success: false,
-          error: result.error,
-        });
-      }
-    } catch (error) {
-      console.error('Error authenticating with SSH key:', error);
-      res.status(500).json({ error: 'SSH key authentication failed' });
     }
-  });
+  );
 
   /**
    * Authenticate with password
    * POST /api/auth/password
    */
-  router.post('/password', async (req, res) => {
-    try {
-      const { userId, password } = req.body;
+  router.post(
+    '/password',
+    strictRateLimiter,
+    validateBody(passwordAuthSchema),
+    async (req: AuthenticatedRequest, res) => {
+      try {
+        const { userId, username, password } = req.body;
+        const user = userId || username;
 
-      if (!userId || !password) {
-        return res.status(400).json({
-          error: 'User ID and password are required',
-        });
+        if (!user) {
+          return res.status(400).json({ error: 'User ID or username is required' });
+        }
+
+        const result = await authService.authenticateWithPassword(user, password);
+
+        if (result.success) {
+          auditLogger.logAuthSuccess(
+            result.userId || user,
+            'password',
+            req.ip,
+            req.get('user-agent')
+          );
+
+          res.json({
+            success: true,
+            token: result.token,
+            userId: result.userId,
+            authMethod: 'password',
+          });
+        } else {
+          auditLogger.logAuthFailure(
+            user,
+            'password',
+            result.error || 'Authentication failed',
+            req.ip,
+            req.get('user-agent')
+          );
+
+          res.status(401).json({
+            success: false,
+            error: result.error,
+          });
+        }
+      } catch (error) {
+        console.error('Error authenticating with password:', error);
+        auditLogger.logSecurityEvent(
+          'Password authentication error',
+          AuditSeverity.ERROR,
+          { error: String(error) },
+          req.ip
+        );
+        res.status(500).json({ error: 'Password authentication failed' });
       }
-
-      const result = await authService.authenticateWithPassword(userId, password);
-
-      if (result.success) {
-        res.json({
-          success: true,
-          token: result.token,
-          userId: result.userId,
-          authMethod: 'password',
-        });
-      } else {
-        res.status(401).json({
-          success: false,
-          error: result.error,
-        });
-      }
-    } catch (error) {
-      console.error('Error authenticating with password:', error);
-      res.status(500).json({ error: 'Password authentication failed' });
     }
-  });
+  );
 
   /**
    * Verify current authentication status
