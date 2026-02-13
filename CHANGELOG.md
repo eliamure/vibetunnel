@@ -2,22 +2,25 @@
 
 ## [Unreleased]
 
+### ⚠️ Breaking Changes
+- **Linux-only support**: macOS and iOS applications have been removed. VibeTunnel now focuses exclusively on Linux support via the npm package.
+
 ### ✨ Improvements
 - Improve mobile session UI with action bar, clipboard manager, and quick keys (via [@Jerome2332](https://github.com/Jerome2332)) (#518)
-- Tighten macOS app icon padding to remove white edge
 - Add JSONValue coverage for Codable JSON handling
-- Default macOS build script to universal binaries with optional arch override (via [@rothnic](https://github.com/rothnic)) (#557)
 
 ### 🐛 Bug Fixes
-- Fix session creation "data couldn't be read" error on Mac app (#500)
 - Add Nix per-user profile path for cloudflared discovery (via [@bkase](https://github.com/bkase)) (#533)
-- Fall back to dns-sd for macOS mDNS advertisement when Bonjour fails
-- Replace JSONSerialization usage with JSONEncoder/Decoder to avoid Obj-C JSON crashes
 - Prefer client-resolved binary paths in `vt` to avoid PATH mismatches
 - Reset CLI outdated status after successful install and add regression coverage
 
 ### 👥 Contributors
-- Thanks [@rothnic](https://github.com/rothnic) for defaulting to universal macOS binaries.
+- Thanks [@rothnic](https://github.com/rothnic) for contributions.
+
+## Historical Releases (macOS/iOS Era)
+
+> **Note**: The following releases include macOS and iOS support which has been removed. 
+> Please refer to the latest release for Linux-only support.
 
 ## [1.0.0-beta.15] - 2025-08-02
 
