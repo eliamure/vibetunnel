@@ -265,8 +265,12 @@ vibetunnel --bore --bore-server tunnel.yourdomain.com --bore-secret "your-secret
 #### Bore Binary Installation
 
 Bore binaries are **automatically downloaded** during npm installation for supported platforms:
-- Linux (x64, ARM64)
+- Linux (x64)
 - macOS (x64, ARM64/Apple Silicon)
+
+**Note**: ARM64 Linux is not included in bore v0.5.1 releases. If you need ARM64 Linux support, you can:
+- Install bore from cargo: `cargo install bore-cli`
+- Use bore from PATH if you have it installed system-wide
 
 If automatic download fails, you can manually download bore:
 ```bash

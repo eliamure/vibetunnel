@@ -18,9 +18,10 @@ const BORE_VERSION = 'v0.5.1';
 const GITHUB_RELEASES_URL = 'https://github.com/ekzhang/bore/releases/download';
 
 // Map platform/arch to bore release target names
+// Note: v0.5.1 doesn't have aarch64-unknown-linux-musl (arm64 Linux)
+// If you need arm64 Linux, consider upgrading to v0.6.0+ or building from source
 const PLATFORMS = {
   'linux-x64': 'x86_64-unknown-linux-musl',
-  'linux-arm64': 'aarch64-unknown-linux-musl',
   'darwin-x64': 'x86_64-apple-darwin',
   'darwin-arm64': 'aarch64-apple-darwin',
 };
@@ -69,6 +70,20 @@ function downloadFile(url, destPath) {
 }
 
 /**
+ * Extract tar.gz archive
+ */
+function extractTarGz(archivePath, destDir) {
+  try {
+    // Use tar command to extract
+    execSync(`tar -xzf "${archivePath}" -C "${destDir}"`, { stdio: 'ignore' });
+    return true;
+  } catch (err) {
+    console.error(`Failed to extract archive: ${err.message}`);
+    return false;
+  }
+}
+
+/**
  * Make file executable (Unix only)
  */
 function makeExecutable(filePath) {
@@ -104,16 +119,36 @@ async function downloadBoreForPlatform(platformKey, target) {
     fs.mkdirSync(platformDir, { recursive: true });
   }
   
-  // Build download URL
-  const filename = `bore-${BORE_VERSION}-${target}`;
-  const url = `${GITHUB_RELEASES_URL}/${BORE_VERSION}/${filename}`;
+  // Build download URL for tar.gz archive
+  const archiveFilename = `bore-${BORE_VERSION}-${target}.tar.gz`;
+  const url = `${GITHUB_RELEASES_URL}/${BORE_VERSION}/${archiveFilename}`;
+  const archivePath = path.join(platformDir, archiveFilename);
   
   try {
-    await downloadFile(url, binaryPath);
+    // Download the archive
+    await downloadFile(url, archivePath);
+    
+    // Extract the archive
+    if (!extractTarGz(archivePath, platformDir)) {
+      throw new Error('Failed to extract archive');
+    }
+    
+    // Remove the archive
+    fs.unlinkSync(archivePath);
+    
+    // Make binary executable
     makeExecutable(binaryPath);
+    
     console.log(`✓ Downloaded bore for ${platformKey}`);
   } catch (err) {
     console.error(`✗ Failed to download bore for ${platformKey}: ${err.message}`);
+    // Clean up partial files
+    if (fs.existsSync(archivePath)) {
+      fs.unlinkSync(archivePath);
+    }
+    if (fs.existsSync(binaryPath)) {
+      fs.unlinkSync(binaryPath);
+    }
     // Don't throw - allow other platforms to download
   }
 }
