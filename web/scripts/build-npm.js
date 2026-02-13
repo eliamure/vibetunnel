@@ -3,12 +3,12 @@
 /**
  * Clean npm build script for VibeTunnel
  * Uses a separate dist-npm directory with its own package.json
- * Builds for all platforms by default with complete prebuild support
+ * Builds for Linux platforms
  * 
  * Options:
  *   --current-only    Build for current platform/arch only (legacy mode)
  *   --no-docker      Skip Docker builds (Linux builds will be skipped)
- *   --platform <os>  Build for specific platform (darwin, linux)
+ *   --platform <os>  Build for specific platform (linux)
  *   --arch <arch>    Build for specific architecture (x64, arm64)
  */
 
@@ -18,7 +18,6 @@ const path = require('path');
 
 const NODE_VERSIONS = ['20', '22', '23', '24'];
 const ALL_PLATFORMS = {
-  darwin: ['x64', 'arm64'],
   linux: ['x64', 'arm64']
 };
 
@@ -48,7 +47,7 @@ const archFilter = args.find(arg => arg.startsWith('--arch'))?.split('=')[1] ||
                   (args.includes('--arch') ? args[args.indexOf('--arch') + 1] : null);
 
 // Validate platform and architecture arguments
-const VALID_PLATFORMS = ['darwin', 'linux'];
+const VALID_PLATFORMS = ['linux'];
 const VALID_ARCHS = ['x64', 'arm64'];
 
 if (platformFilter && !VALID_PLATFORMS.includes(platformFilter)) {
@@ -109,143 +108,6 @@ function checkDocker() {
     }
     return false;
   }
-}
-
-// Build for macOS locally
-function buildMacOS() {
-  console.log('🍎 Building macOS binaries locally...\n');
-  
-  // First ensure prebuild is available
-  try {
-    execSync('npx prebuild --version', { stdio: 'pipe' });
-  } catch (e) {
-    console.log('  Installing prebuild dependencies...');
-    execSync('npm install', { stdio: 'inherit' });
-  }
-  
-  // Build node-pty
-  console.log('  Building node-pty...');
-  const nodePtyDir = path.join(__dirname, '..', 'node-pty');
-  
-  for (const nodeVersion of NODE_VERSIONS) {
-    for (const arch of PLATFORMS.darwin || []) {
-      console.log(`    → node-pty for Node.js ${nodeVersion} ${arch}`);
-      try {
-        execSync(`npx prebuild --runtime node --target ${nodeVersion}.0.0 --arch ${arch}`, {
-          cwd: nodePtyDir,
-          stdio: 'pipe'
-        });
-      } catch (error) {
-        console.error(`      ❌ Failed to build node-pty for Node.js ${nodeVersion} ${arch}`);
-        console.error(`      Error: ${error.message}`);
-        process.exit(1);
-      }
-    }
-  }
-  
-  // Build universal spawn-helper binaries for macOS
-  console.log('  Building universal spawn-helper binaries...');
-  const spawnHelperSrc = path.join(nodePtyDir, 'src', 'unix', 'spawn-helper.cc');
-  const tempDir = path.join(__dirname, '..', 'temp-spawn-helper');
-  
-  // Ensure temp directory exists
-  if (!fs.existsSync(tempDir)) {
-    fs.mkdirSync(tempDir, { recursive: true });
-  }
-  
-  try {
-    // Build for x64
-    console.log(`    → spawn-helper for x64`);
-    execSync(`clang++ -arch x86_64 -o ${tempDir}/spawn-helper-x64 ${spawnHelperSrc}`, {
-      stdio: 'pipe'
-    });
-    
-    // Build for arm64
-    console.log(`    → spawn-helper for arm64`);
-    execSync(`clang++ -arch arm64 -o ${tempDir}/spawn-helper-arm64 ${spawnHelperSrc}`, {
-      stdio: 'pipe'
-    });
-    
-    // Create universal binary
-    console.log(`    → Creating universal spawn-helper binary`);
-    execSync(`lipo -create ${tempDir}/spawn-helper-x64 ${tempDir}/spawn-helper-arm64 -output ${tempDir}/spawn-helper-universal`, {
-      stdio: 'pipe'
-    });
-    
-    // Add universal spawn-helper to each macOS prebuild
-    for (const nodeVersion of NODE_VERSIONS) {
-      for (const arch of PLATFORMS.darwin || []) {
-        const prebuildFile = path.join(nodePtyDir, 'prebuilds', `node-pty-v1.0.0-node-v${getNodeAbi(nodeVersion)}-darwin-${arch}.tar.gz`);
-        if (fs.existsSync(prebuildFile)) {
-          console.log(`    → Adding spawn-helper to ${path.basename(prebuildFile)}`);
-          
-          // Extract existing prebuild
-          const extractDir = path.join(tempDir, `extract-${nodeVersion}-${arch}`);
-          if (fs.existsSync(extractDir)) {
-            fs.rmSync(extractDir, { recursive: true, force: true });
-          }
-          fs.mkdirSync(extractDir, { recursive: true });
-          
-          execSync(`tar -xzf ${prebuildFile} -C ${extractDir}`, { stdio: 'pipe' });
-          
-          // Copy universal spawn-helper
-          fs.copyFileSync(`${tempDir}/spawn-helper-universal`, `${extractDir}/build/Release/spawn-helper`);
-          fs.chmodSync(`${extractDir}/build/Release/spawn-helper`, '755');
-          
-          // Repackage prebuild
-          execSync(`tar -czf ${prebuildFile} -C ${extractDir} .`, { stdio: 'pipe' });
-          
-          // Clean up extract directory
-          fs.rmSync(extractDir, { recursive: true, force: true });
-        }
-      }
-    }
-    
-    // Clean up temp directory
-    fs.rmSync(tempDir, { recursive: true, force: true });
-    console.log('    ✅ Universal spawn-helper binaries created and added to prebuilds');
-    
-  } catch (error) {
-    console.error(`      ❌ Failed to build universal spawn-helper: ${error.message}`);
-    // Clean up on error
-    if (fs.existsSync(tempDir)) {
-      fs.rmSync(tempDir, { recursive: true, force: true });
-    }
-    process.exit(1);
-  }
-  
-  // Build authenticate-pam
-  console.log('  Building authenticate-pam...');
-  const authenticatePamDir = path.join(__dirname, '..', 'node_modules', '.pnpm', 'authenticate-pam@1.0.5', 'node_modules', 'authenticate-pam');
-  
-  for (const nodeVersion of NODE_VERSIONS) {
-    for (const arch of PLATFORMS.darwin || []) {
-      console.log(`    → authenticate-pam for Node.js ${nodeVersion} ${arch}`);
-      try {
-        // Use inherit stdio to see any errors during build
-        const result = execSync(`npx prebuild --runtime node --target ${nodeVersion}.0.0 --arch ${arch} --tag-prefix authenticate-pam-v`, {
-          cwd: authenticatePamDir,
-          stdio: 'pipe',
-          env: { ...process.env, npm_config_target_platform: 'darwin', npm_config_target_arch: arch }
-        });
-        
-        // Check if prebuild was actually created
-        const prebuildFile = path.join(authenticatePamDir, 'prebuilds', `authenticate-pam-v1.0.5-node-v${getNodeAbi(nodeVersion)}-darwin-${arch}.tar.gz`);
-        if (fs.existsSync(prebuildFile)) {
-          console.log(`      ✅ Created ${path.basename(prebuildFile)}`);
-        } else {
-          console.warn(`      ⚠️  Prebuild file not created for Node.js ${nodeVersion} ${arch}`);
-        }
-      } catch (error) {
-        // Don't exit on macOS authenticate-pam build failures - it might work during npm install
-        console.warn(`      ⚠️  authenticate-pam build failed for macOS (this may be normal)`);
-        console.warn(`      Error: ${error.message}`);
-        // Continue with other builds instead of exiting
-      }
-    }
-  }
-  
-  console.log('✅ macOS builds completed\n');
 }
 
 // Build for Linux using Docker
@@ -587,13 +449,6 @@ async function main() {
   if (!currentOnly) {
     // Check Docker availability for Linux builds
     const hasDocker = checkDocker();
-    
-    // Build for macOS if included in targets
-    if (PLATFORMS.darwin && process.platform === 'darwin') {
-      buildMacOS();
-    } else if (PLATFORMS.darwin && process.platform !== 'darwin') {
-      console.log('⚠️  Skipping macOS builds (not running on macOS)\n');
-    }
     
     // Build for Linux if included in targets
     if (PLATFORMS.linux && hasDocker && !noDocker) {
