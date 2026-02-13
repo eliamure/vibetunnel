@@ -465,22 +465,16 @@ struct AboutSettingsView: View {
             // Links section
             VStack(spacing: Theme.Spacing.medium) {
                 LinkRow(
-                    icon: "globe",
-                    title: "Website",
-                    subtitle: "vibetunnel.sh",
-                    url: URL(string: "https://vibetunnel.sh"))
-
-                LinkRow(
                     icon: "doc.text",
                     title: "Documentation",
-                    subtitle: "Learn how to use VibeTunnel",
-                    url: URL(string: "https://docs.vibetunnel.sh"))
+                    subtitle: "See docs/ folder in repository",
+                    url: nil)
 
                 LinkRow(
                     icon: "exclamationmark.bubble",
                     title: "Report an Issue",
-                    subtitle: "Help us improve",
-                    url: URL(string: "https://github.com/vibetunnel/vibetunnel/issues"))
+                    subtitle: "Contact your IT team",
+                    url: nil)
 
                 LinkRow(
                     icon: "heart",

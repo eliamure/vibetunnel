@@ -1,38 +1,19 @@
-# VibeTunnel 🚇 - Turn any browser into your terminal; command agents from the road (vt.sh)
+# VibeTunnel 🚇
 
-<!-- Generated: 2025-07-28 12:35:00 UTC -->
 <p align="center">
   <img src="assets/banner.png" alt="VibeTunnel Banner" />
 </p>
 
 <p align="center">
-  <strong>Turn any browser into your Mac terminal.</strong><br>
-  VibeTunnel proxies your terminals right into the browser, so you can vibe-code anywhere.
+  <strong>Turn any browser into your terminal.</strong><br>
+  VibeTunnel proxies your terminals right into the browser for remote access and monitoring.
 </p>
 
 <p align="center">
-  <a href="https://github.com/amantus-ai/vibetunnel/releases/latest"><img src="https://img.shields.io/badge/Download-macOS-blue" alt="Download"></a>
-  <a href="https://www.npmjs.com/package/vibetunnel"><img src="https://img.shields.io/npm/v/vibetunnel.svg" alt="npm version"></a>
-  <a href="https://formulae.brew.sh/cask/vibetunnel"><img src="https://img.shields.io/homebrew/cask/v/vibetunnel" alt="Homebrew"></a>
-  <a href="https://nodejs.org"><img src="https://img.shields.io/badge/Node.js-22.12%2B-339933?logo=node.js" alt="Node.js 22.12+"></a>
-  <a href="https://discord.gg/3Ub3EUwrcR"><img src="https://img.shields.io/discord/1394471066990280875?label=Discord&logo=discord" alt="Discord"></a>
-  <a href="https://twitter.com/vibetunnel"><img src="https://img.shields.io/twitter/follow/vibetunnel?style=social" alt="Twitter"></a>
-</p>
-
-<p align="center">
-  <a href="https://www.npmjs.com/package/vibetunnel"><img src="https://img.shields.io/badge/Linux-Supported-brightgreen" alt="Linux Support"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-green" alt="License"></a>
-  <a href="https://www.apple.com/macos/"><img src="https://img.shields.io/badge/macOS-14.0+-red" alt="macOS 14.0+"></a>
-  <a href="https://support.apple.com/en-us/HT211814"><img src="https://img.shields.io/badge/Apple%20Silicon-Required-orange" alt="Apple Silicon"></a>
-  <a href="https://vibetunnel.sh/#support"><img src="https://img.shields.io/badge/Support%20us-on%20Polar-purple" alt="Support us on Polar"></a>
-  <a href="https://deepwiki.com/amantus-ai/vibetunnel"><img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki"></a>
-</p>
-
-<p align="center">
-  <a href="https://docs.vibetunnel.sh">Documentation</a> •
-  <a href="https://github.com/amantus-ai/vibetunnel/releases">Releases</a> •
-  <a href="https://discord.gg/3Ub3EUwrcR">Discord</a> •
-  <a href="https://twitter.com/vibetunnel">Twitter</a>
+  <img src="https://img.shields.io/badge/macOS-14.0+-red" alt="macOS 14.0+">
+  <img src="https://img.shields.io/badge/Linux-Supported-brightgreen" alt="Linux Support">
+  <img src="https://img.shields.io/badge/Node.js-22.12%2B-339933?logo=node.js" alt="Node.js 22.12+">
 </p>
 
 ## Table of Contents
@@ -52,9 +33,6 @@
 - [Poltergeist Integration](#poltergeist-integration)
 - [Documentation](#documentation)
 - [macOS Permissions](#macos-permissions)
-- [Contributing](#contributing)
-- [Support VibeTunnel](#support-vibetunnel)
-- [Credits](#credits)
 - [License](#license)
 
 ## Why VibeTunnel?
@@ -81,12 +59,12 @@ This gives you the full VibeTunnel server with web UI, just without the macOS me
 
 **macOS App**: Requires an Apple Silicon Mac (M1+). Intel Macs are not supported for the native app.
 
-**npm Package**: Works on any system with Node.js 22.12+, including Intel Macs and Linux. Windows is not yet supported ([#252](https://github.com/amantus-ai/vibetunnel/issues/252)).
+**npm Package**: Works on any system with Node.js 22.12+, including Intel Macs and Linux.
 
 ### 1. Download & Install
 
 #### Option 1: Direct Download
-[Download VibeTunnel](https://github.com/amantus-ai/vibetunnel/releases/latest) and drag it to your Applications folder.
+Build from source (see Building from Source section)
 
 #### Option 2: Homebrew
 ```bash
@@ -709,7 +687,7 @@ npm publish
 
 ```bash
 # Clone the repository
-git clone https://github.com/amantus-ai/vibetunnel.git
+git clone https://github.com/YOUR_ENTERPRISE/vibetunnel.git
 cd vibetunnel
 
 # Set up code signing (required for macOS/iOS development)
@@ -762,8 +740,6 @@ export VIBETUNNEL_USE_CUSTOM_NODE=YES
 See [Custom Node Build Flags](docs/custom-node-build-flags.md) for detailed optimization information.
 
 ## Development
-
-For development setup and contribution guidelines, see [CONTRIBUTING.md](docs/CONTRIBUTING.md).
 
 ### Key Files
 - **macOS App**: `mac/VibeTunnel/VibeTunnelApp.swift`
@@ -1006,9 +982,7 @@ To enable iOS builds, edit `poltergeist.config.json` and set `"enabled": true` f
 ## Documentation
 
 - [Keyboard Shortcuts](docs/keyboard-shortcuts.md) - Complete keyboard shortcut reference
-- [Quick Reference Card](docs/keyboard-shortcuts-quick-reference.md) - Printable shortcuts cheat sheet
 - [Technical Specification](docs/spec.md) - Detailed architecture and implementation
-- [Contributing Guide](docs/CONTRIBUTING.md) - Development setup and guidelines
 - [Architecture](docs/architecture.md) - System design overview
 - [Build System](docs/build-system.md) - Build process details
 - [Push Notifications](docs/push-notification.md) - How web push notifications work
@@ -1115,46 +1089,6 @@ Apple redacts dynamic values in logs by default to protect user privacy. This pr
 
 For more detailed information about logging privacy and additional methods, see [apple/docs/logging-private-fix.md](apple/docs/logging-private-fix.md).
 
-## Contributing
-
-We welcome contributions! VibeTunnel is a community-driven project and we'd love to have you join us.
-
-### Join Our Community
-
-Connect with the VibeTunnel team and other contributors on our [Discord server](https://discord.gg/3Ub3EUwrcR). It's the best place to:
-- Discuss new features and ideas
-- Get help with development setup
-- Coordinate on larger changes
-- Share your VibeTunnel use cases
-
-### How to Contribute
-
-1. **Join Discord**: Start by joining our [Discord server](https://discord.gg/3Ub3EUwrcR) to say hello!
-2. **Check Issues**: Look for issues labeled `good first issue` or `help wanted`
-3. **Development Setup**: Follow our [Contributing Guide](docs/CONTRIBUTING.md) for detailed setup instructions
-4. **Submit PRs**: Fork the repo, create a branch, and submit your changes
-
-For technical details on building and developing VibeTunnel, see our [Contributing Guide](docs/CONTRIBUTING.md).
-
-## Support VibeTunnel
-
-Love VibeTunnel? Help us keep the terminal vibes flowing! Your support helps us buy pizza and drinks while we keep hacking on your favorite AI agent orchestration platform.
-
-All donations go directly to the development team. Choose your own amount - one-time or monthly! Visit our [Polar page](https://vibetunnel.sh/#support) to support us.
-
-## Credits
-
-Created with ❤️ by:
-- [@badlogic](https://mariozechner.at/) - Mario Zechner
-- [@mitsuhiko](https://lucumr.pocoo.org/) - Armin Ronacher  
-- [@steipete](https://steipete.com/) - Peter Steinberger
-- [@hjanuschka](https://x.com/hjanuschka) - Helmut Januschka
-- [@manuelmaly](https://x.com/manuelmaly) - Manuel Maly
-
 ## License
 
 VibeTunnel is open source software licensed under the MIT License. See [LICENSE](LICENSE) for details.
-
----
-
-**Ready to vibe?** [Download VibeTunnel](https://github.com/amantus-ai/vibetunnel/releases/latest) and start tunneling!

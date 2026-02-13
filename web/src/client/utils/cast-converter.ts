@@ -422,7 +422,6 @@ export function connectToStream(
   };
 }
 
-=======
 /**
  * Connect terminal to a streaming URL using Server-Sent Events (SSE).
  * Handles real-time terminal output, input, and resize events from the stream.
