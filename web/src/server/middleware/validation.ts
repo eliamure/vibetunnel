@@ -114,7 +114,7 @@ export const createSessionSchema = z.object({
   cwd: z.string().optional(),
   cols: z.number().int().positive().optional(),
   rows: z.number().int().positive().optional(),
-  env: z.record(z.string()).optional(),
+  env: z.record(z.string(), z.string()).optional(),
 });
 
 // Configuration update request

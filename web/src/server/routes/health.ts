@@ -171,9 +171,12 @@ function checkSystemHealth(): HealthStatus {
 
   // Overall status
   let status: 'healthy' | 'degraded' | 'unhealthy' = 'healthy';
-  if (memoryCheck === 'fail' || cpuCheck === 'fail' || diskCheck === 'fail') {
+  const hasFail = [memoryCheck, cpuCheck, diskCheck].some(check => check === 'fail');
+  const hasWarn = [memoryCheck, cpuCheck, diskCheck].some(check => check === 'warn');
+  
+  if (hasFail) {
     status = 'unhealthy';
-  } else if (memoryCheck === 'warn' || cpuCheck === 'warn' || diskCheck === 'warn') {
+  } else if (hasWarn) {
     status = 'degraded';
   }
 
