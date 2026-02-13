@@ -175,3 +175,6 @@ mac/build-test/
 *.crt
 *.key
 .tmp/
+
+# Bore tunnel binaries (downloaded during postinstall)
+web/binaries/
