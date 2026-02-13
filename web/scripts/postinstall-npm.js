@@ -152,7 +152,7 @@ const modules = [
     dir: path.join(__dirname, '..', 'node_modules', 'authenticate-pam'),
     build: path.join(__dirname, '..', 'node_modules', 'authenticate-pam', 'build', 'Release', 'authenticate_pam.node'),
     essential: false, // Optional - falls back to other auth methods
-    platforms: ['linux', 'darwin'], // Needed on Linux and macOS
+    platforms: ['linux'], // Needed on Linux
     skipDirCheck: true // Don't check if dir exists since it's optional
   }
 ];
@@ -215,15 +215,14 @@ for (const module of modules) {
 
   // Check final result
   if (!success) {
-    // Special handling for authenticate-pam on macOS
-    if (module.name === 'authenticate-pam' && process.platform === 'darwin') {
-      console.warn(`⚠️  Warning: ${module.name} installation failed on macOS.`);
-      console.warn('   This is expected - macOS will fall back to environment variable or SSH key authentication.');
-      console.warn('   To enable PAM authentication, install Xcode Command Line Tools and rebuild.');
+    // Special handling for authenticate-pam
+    if (module.name === 'authenticate-pam') {
+      console.warn(`⚠️  Warning: ${module.name} installation failed.`);
+      console.warn('   System will fall back to environment variable or SSH key authentication.');
+      console.warn('   To enable PAM authentication, install build tools and rebuild.');
     } else if (module.essential) {
       console.error(`\n❌ ${module.name} is required for VibeTunnel to function.`);
       console.error('You may need to install build tools for your platform:');
-      console.error('- macOS: Install Xcode Command Line Tools');
       console.error('- Linux: Install build-essential and libpam0g-dev packages');
       hasErrors = true;
     } else {
