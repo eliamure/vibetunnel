@@ -36,6 +36,7 @@ import { getMetricsCollector } from './routes/health.js';
 import { AuthService } from './services/auth-service.js';
 import { CastOutputHub } from './services/cast-output-hub.js';
 import { CloudflareService } from './services/cloudflare-service.js';
+import { BoreService } from './services/bore-service.js';
 import { ConfigService } from './services/config-service.js';
 import { ControlDirWatcher } from './services/control-dir-watcher.js';
 import { GitStatusHub } from './services/git-status-hub.js';
@@ -87,6 +88,7 @@ interface ConnectionInfo {
 interface GlobalTunnelState {
   __ngrokService?: NgrokService;
   __cloudflareService?: CloudflareService;
+  __boreService?: import('./services/bore-service.js').BoreService;
 }
 
 const globalTunnelState = global as typeof global & GlobalTunnelState;
@@ -142,6 +144,10 @@ interface Config {
   ngrokRegion: string | null;
   // Cloudflare tunnel configuration
   enableCloudflare: boolean;
+  // Bore tunnel configuration
+  enableBore: boolean;
+  boreServer: string | null;
+  boreSecret: string | null;
 }
 
 // Show help message
@@ -180,6 +186,9 @@ Tunnel Options:
   --ngrok-domain <dom>  Custom ngrok domain (requires paid plan)
   --ngrok-region <reg>  Ngrok region (us, eu, ap, au, sa, jp, in)
   --cloudflare          Enable Cloudflare tunnel (Quick Tunnel)
+  --bore                Enable bore tunnel for remote access
+  --bore-server <host>  Bore server hostname (default: bore.pub)
+  --bore-secret <key>   Bore authentication secret (optional)
 
 HQ Mode Options:
   --hq                  Run as HQ (headquarters) server
@@ -209,6 +218,12 @@ Examples:
 
   # Run with Cloudflare tunnel
   vibetunnel-server --no-auth --cloudflare
+
+  # Run with bore tunnel
+  vibetunnel-server --no-auth --bore
+
+  # Run with bore and custom server
+  vibetunnel-server --bore --bore-server tunnel.mydomain.com --bore-secret "my-secret"
 
   # Run with ngrok and custom domain
   vibetunnel-server --ngrok --ngrok-auth TOKEN --ngrok-domain custom.ngrok.io
@@ -266,6 +281,10 @@ function parseArgs(): Config {
     ngrokRegion: null as string | null,
     // Cloudflare tunnel configuration
     enableCloudflare: false,
+    // Bore tunnel configuration
+    enableBore: false,
+    boreServer: null as string | null,
+    boreSecret: null as string | null,
   };
 
   // Check for help flag first
@@ -351,6 +370,15 @@ function parseArgs(): Config {
       i++; // Skip the region value in next iteration
     } else if (args[i] === '--cloudflare') {
       config.enableCloudflare = true;
+    } else if (args[i] === '--bore') {
+      config.enableBore = true;
+    } else if (args[i] === '--bore-server' && i + 1 < args.length) {
+      config.boreServer = args[i + 1];
+      config.enableBore = true;
+      i++; // Skip the server value in next iteration
+    } else if (args[i] === '--bore-secret' && i + 1 < args.length) {
+      config.boreSecret = args[i + 1];
+      i++; // Skip the secret value in next iteration
     } else if (args[i].startsWith('--')) {
       // Unknown argument
       logger.error(`Unknown argument: ${args[i]}`);
@@ -1547,6 +1575,37 @@ export async function createApp(): Promise<AppInstance> {
           });
       }
 
+      // Start bore tunnel if requested
+      if (config.enableBore) {
+        logger.log(chalk.blue('Starting bore tunnel...'));
+
+        const boreService = new BoreService({
+          localPort: actualPort,
+          serverHost: config.boreServer || undefined,
+          secret: config.boreSecret || undefined,
+        });
+        globalTunnelState.__boreService = boreService;
+
+        boreService
+          .start()
+          .then((tunnel) => {
+            logger.log(chalk.green('Bore tunnel: ENABLED'));
+            logger.log(chalk.green(`Public URL: ${tunnel.publicUrl}`));
+            logger.log(chalk.gray('Your VibeTunnel server is now accessible from the internet'));
+          })
+          .catch((error) => {
+            logger.error(chalk.red('Failed to start bore tunnel:'), error.message);
+            logger.warn(
+              chalk.yellow(
+                'VibeTunnel will continue running locally, but bore tunnel is not available'
+              )
+            );
+            logger.log(
+              chalk.blue('Install bore or run: npm run download-bore')
+            );
+          });
+      }
+
       // Log local bypass status
       if (config.allowLocalBypass) {
         logger.log(chalk.yellow('Local Bypass: ENABLED'));
@@ -1764,6 +1823,14 @@ export async function startVibeTunnelServer() {
         logger.log('Stopping Cloudflare tunnel...');
         await cloudflareService.stop();
         logger.debug('Stopped Cloudflare tunnel');
+      }
+
+      // Stop bore tunnel if it was started
+      const boreService = globalTunnelState.__boreService;
+      if (boreService?.isRunning()) {
+        logger.log('Stopping bore tunnel...');
+        await boreService.stop();
+        logger.debug('Stopped bore tunnel');
       }
 
       // Stop control directory watcher
